@@ -35,3 +35,16 @@ def plot_sma_strategy(prices: pd.Series, short: int, long: int) -> None:
     plt.legend()
     plt.title("SMA Crossover Strategy")
     plt.show()
+
+def plot_comparison(prices: pd.Series, strategy_returns: pd.Series) -> None:
+    strategy_equity = (1 + strategy_returns).cumprod()
+
+    buy_hold = prices.pct_change()
+    buy_hold_equity = (1 + buy_hold).cumprod()
+
+    plt.figure()
+    plt.plot(strategy_equity, label="Strategy")
+    plt.plot(buy_hold_equity, label="Buy & Hold")
+    plt.legend()
+    plt.title("Strategy vs Buy & Hold")
+    plt.show()

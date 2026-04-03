@@ -6,3 +6,6 @@ def sharpe_ratio(returns: pd.Series) -> float:
 
 def cumulative_return(returns: pd.Series) -> float:
     return (1 + returns).prod() - 1 # type: ignore
+
+def buy_and_hold_returns(prices: pd.Series) -> pd.Series:
+    return prices.pct_change()

@@ -1,7 +1,7 @@
 from data import load_price_data
 from strategies import sma_crossover
 from metrics import sharpe_ratio, cumulative_return
-from plots import plot_price, plot_equity_curve, plot_sma_strategy
+from plots import plot_price, plot_equity_curve, plot_sma_strategy, plot_comparison
 
 prices = None
 returns = None
@@ -49,6 +49,12 @@ while True:
             plot_sma_strategy(prices, last_short, last_long)
         else:
             print("No data loaded.")
+
+    elif command == "plot comparison":
+        if prices is not None and returns is not None:
+            plot_comparison(prices, returns)
+        else:
+            print("Need prices and strategy returns.")
 
     elif command == "exit":
         break
