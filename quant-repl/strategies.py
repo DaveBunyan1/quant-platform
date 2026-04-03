@@ -1,4 +1,6 @@
-def sma_crossover(prices, short=50, long=200):
+import pandas as pd
+
+def sma_crossover(prices: pd.Series, short: int=50, long: int=200) -> pd.Series:
     short_ma = prices.rolling(short).mean()
     long_ma = prices.rolling(long).mean()
 
