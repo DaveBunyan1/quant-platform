@@ -17,6 +17,7 @@ from quant_platform.core.database import get_async_session
 from quant_platform.main import app
 from quant_platform.models.base import Base
 from quant_platform.models.user import User
+from quant_platform.schemas.users import UserCreate
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
@@ -25,36 +26,44 @@ TEST_DATABASE_URL = os.getenv(
 
 
 @pytest_asyncio.fixture
-async def create_user(
-    db_session: AsyncSession,
-) -> Callable[..., Coroutine[None, None, User]]:
+async def create_user() -> Callable[..., Coroutine[Any, Any, UserCreate]]:
     """
     Factory fixture allowing tests to generate unique users on demand.
     """
 
-    async def _create_user(**overrides: Any) -> User:
+    async def _create_user(**overrides: Any) -> UserCreate:
         defaults = {
             "email": "user@example.com",
             "username": "Test User",
-            "hashed_password": hash_password("SecurePassword123!"),
+            "password": "SecurePassword123!",
         }
         defaults.update(overrides)
-        user = User(**defaults)
+        user = UserCreate(**defaults)
 
-        db_session.add(user)
-        await db_session.flush()  # Populates user.id without closing transaction
-        await db_session.refresh(user)
         return user
 
     return _create_user
 
 
 @pytest_asyncio.fixture()
-async def initial_user(create_user: Callable[..., Coroutine[Any, Any, User]]) -> User:
+async def initial_user(
+    create_user: Callable[..., Coroutine[Any, Any, UserCreate]],
+    db_session: AsyncSession,
+) -> User:
     """
     Creates and returns a default initial user for tests.
     """
-    return await create_user(email="initial_user@example.com")
+    user_create = await create_user(email="initial_user@example.com")
+
+    hashed_password = hash_password(user_create.password)
+
+    user = User(
+        **user_create.model_dump(exclude={"password"}), hashed_password=hashed_password
+    )
+    db_session.add(user)
+    await db_session.flush()
+    await db_session.refresh(user)
+    return user
 
 
 @pytest_asyncio.fixture(scope="session")

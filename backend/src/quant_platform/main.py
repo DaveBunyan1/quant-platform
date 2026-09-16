@@ -27,3 +27,8 @@ app.add_middleware(
 
 app.include_router(user_router)
 app.include_router(auth_router)
+
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}

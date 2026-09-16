@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,9 +34,7 @@ async def register(
         await session.refresh(user)
     except IntegrityError as err:
         await session.rollback()
-        raise HTTPException(
-            status_code=400, detail="Email or username already registered"
-        ) from err
+        raise HTTPException(status_code=400, detail="Email already registered") from err
 
     return user
 
@@ -94,11 +92,11 @@ async def refresh(
     if not db_token or not db_token.is_valid():
         if db_token:
             await session.execute(
-                select(RefreshToken)
+                update(RefreshToken)
                 .where(RefreshToken.family_id == db_token.family_id)
+                .values(revoked=True)
                 .execution_options(synchronize_session=False)
             )
-            db_token.revoked = True
             await session.commit()
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
 
