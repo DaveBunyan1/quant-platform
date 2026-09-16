@@ -1,4 +1,5 @@
 import type { FormInput } from '../../types/form';
+import Button from './Button';
 
 type FormProps = {
   inputs: FormInput[];
@@ -27,12 +28,7 @@ const Form = ({ inputs, onSubmit, buttonText }: FormProps) => {
         </div>
       ))}
 
-      <button
-        className="w-full cursor-pointer rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white shadow-md transition duration-200 hover:bg-blue-700 hover:shadow-lg dark:bg-purple-900 dark:hover:bg-purple-950"
-        type="submit"
-      >
-        {buttonText}
-      </button>
+      <Button text={buttonText} />
     </form>
   );
 };

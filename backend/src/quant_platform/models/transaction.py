@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import UUID, DateTime, Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,7 +12,7 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid7
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), index=True
@@ -21,7 +21,7 @@ class Transaction(Base):
     shares: Mapped[float] = mapped_column(Float)
     price_per_share: Mapped[float] = mapped_column(Float)
     timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.now
+        DateTime(timezone=True), default=datetime.now(UTC)
     )
 
     user: Mapped[User] = relationship("User", back_populates="transactions")
