@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useAuthStore } from '@/stores/authStore';
+import { getAccessToken, clearAuthSession } from '@/stores/authStore';
 
 export const api = axios.create({
   baseURL: 'http://localhost:8000',
@@ -11,7 +11,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
+  const token = getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -23,7 +23,7 @@ api.interceptors.response.use(
   async (error) => {
     // simple version – expand later
     if (error.response?.status === 401) {
-      useAuthStore.getState().clearAuth();
+      clearAuthSession();
     }
     return Promise.reject(error);
   },
