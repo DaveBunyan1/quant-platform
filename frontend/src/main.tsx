@@ -5,15 +5,15 @@ import App from './App.tsx';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { queryClient } from './api/queryClient.ts';
+import { queryClient } from './providers/QueryProvider.ts';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Router>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <Router>
         <App />
         <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </Router>
+      </Router>
+    </QueryClientProvider>
   </StrictMode>,
 );
