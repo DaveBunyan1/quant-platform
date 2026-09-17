@@ -3,6 +3,7 @@ import PrivateRoutes from './PrivateRoutes';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import PublicRoutes from './PublicRoutes';
 
 const App = () => {
   return (
@@ -10,8 +11,10 @@ const App = () => {
       <Route element={<PrivateRoutes />}>
         <Route path="/" element={<DashboardPage />} />
       </Route>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<PublicRoutes />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Route>
     </Routes>
   );
 };

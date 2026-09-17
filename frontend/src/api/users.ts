@@ -1,4 +1,4 @@
-import { api } from './axios';
+import { api } from './client';
 import type { User } from '@/types/user';
 
 export const getCurrentUser = async (token?: string) => {

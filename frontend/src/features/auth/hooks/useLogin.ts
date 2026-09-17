@@ -1,47 +1,34 @@
-import { login } from '@/api/auth';
-import { getCurrentUser } from '@/api/users';
-import { useAuthActions } from '@/stores/authStore';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { authApi } from '../api/auth';
+import { tokenStore } from '@/lib/token';
+import { api } from '@/api/client';
 
-const useLogin = () => {
+export function useLogin() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { setAuth, clearAuth } = useAuthActions();
 
-  const loginMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const email = formData.get('username') as string;
-      const password = formData.get('password') as string;
+  return useMutation({
+    mutationFn: async (credentials: { username: string; password: string }) => {
+      const loginResponse = await authApi.login(credentials);
 
-      const loginRes = await login(email, password);
-      const { access_token } = loginRes.data;
+      const accessToken = loginResponse.data.access_token;
 
-      const meRes = await getCurrentUser(access_token);
+      if (!accessToken) {
+        throw new Error('No access_token returned from login');
+      }
+      tokenStore.set(accessToken);
 
-      return { access_token, user: meRes.data };
+      const userResponse = await api.get('/users/me', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      return userResponse.data;
     },
-    onSuccess: ({ access_token, user }) => {
-      setAuth(access_token, user);
-      navigate('/');
-    },
-    onError: () => {
-      clearAuth();
+    onSuccess: (user) => {
+      queryClient.setQueryData(['user'], user);
+      navigate('/', { replace: true });
     },
   });
-
-  const getErrorMessage = (err: any) => {
-    if (!err) return null;
-
-    const detail = err.response?.data?.detail;
-    if (typeof detail === 'string') return detail;
-    if (Array.isArray(detail)) return detail.map((e) => e.msg).join(', ');
-    return err.message || 'Login failed. Please try again';
-  };
-
-  const errorMessage = getErrorMessage(loginMutation.error);
-  const isPending = loginMutation.isPending;
-
-  return { errorMessage, isPending, mutate: loginMutation.mutate };
-};
-
-export default useLogin;
+}

@@ -1,3 +1,9 @@
 Add logging and prometheus to backend
 
-Finish frontend
+Add obsevability to frontend
+
+Add frontend tests
+
+Make refreshing not log you out
+
+Clean up login/register page

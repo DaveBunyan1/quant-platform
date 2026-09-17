@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuth } from './features/auth/hooks/useAuth';
 
-const PrivateRoutes = () => {
+const PublicRoutes = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -12,7 +12,8 @@ const PrivateRoutes = () => {
     );
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  // Already logged in → redirect away from login/register
+  return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
 };
 
-export default PrivateRoutes;
+export default PublicRoutes;
