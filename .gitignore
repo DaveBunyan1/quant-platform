@@ -24,6 +24,7 @@ coverage.xml
 .hypothesis/
 .tox/
 .nox/
+coverage/
 
 # Script / generated data
 samples/

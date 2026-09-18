@@ -6,6 +6,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { QueryProvider } from './providers/QueryProvider.tsx';
 import { bootstrapAuth } from './features/auth/api/bootstrap.ts';
+import { initWebVitals } from './lib/metrics.ts';
 
 async function prepare() {
   await bootstrapAuth();
@@ -23,3 +24,5 @@ prepare().then(() => {
     </StrictMode>,
   );
 });
+
+initWebVitals();

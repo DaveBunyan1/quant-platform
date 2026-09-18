@@ -25,6 +25,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "build"]
+  "include": ["src", "./vitest.setup.ts"],
+  "exclude": ["node_modules", "build", "src/**/*.{test,spec}.{ts,tsx}", "src/test/**"]
 }
