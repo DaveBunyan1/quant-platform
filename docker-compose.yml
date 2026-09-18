@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:16-alpine
     container_name: quant_platform_db
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: quant
       POSTGRES_PASSWORD: quant
@@ -17,5 +17,62 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: quant_platform_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://quant:quant@db:5432/quant_platform
+      ENVIRONMENT: development
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn quant_platform.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # TODO: Frontend + Dockerfile
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "5173:5173"
+  #   volumes:
+  #     - ./frontend:/app
+  #   command: npm run dev -- --host
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: quant_platform_prometheus
+    restart: unless-stopped
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: quant_platform_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
 volumes:
   postgres_data:
+  prometheus_data:
+  grafana_data:
