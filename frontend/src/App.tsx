@@ -1,10 +1,21 @@
+import { Route, Routes } from 'react-router-dom';
+import PrivateRoutes from './PrivateRoutes';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+import PublicRoutes from './PublicRoutes';
+
 const App = () => {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100">
-      <h1 className="text-4xl font-bold text-blue-600">
-        Hello, React + TypeScript + Tailwind!
-      </h1>
-    </main>
+    <Routes>
+      <Route element={<PrivateRoutes />}>
+        <Route path="/" element={<DashboardPage />} />
+      </Route>
+      <Route element={<PublicRoutes />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Route>
+    </Routes>
   );
 };
 
