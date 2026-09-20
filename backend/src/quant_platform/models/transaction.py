@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 
 from sqlalchemy import UUID, DateTime, Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -20,8 +20,14 @@ class Transaction(Base):
     ticker: Mapped[str] = mapped_column(String(20), index=True)
     shares: Mapped[float] = mapped_column(Float)
     price_per_share: Mapped[float] = mapped_column(Float)
-    timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.now(UTC)
+    transaction_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.now
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.now, onupdate=datetime.now
     )
 
     user: Mapped[User] = relationship("User", back_populates="transactions")

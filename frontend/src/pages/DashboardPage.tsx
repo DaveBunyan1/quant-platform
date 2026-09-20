@@ -1,7 +1,13 @@
+import LogoutButton from '@/features/auth/components/LogoutButton';
+import AddHolding from '@/features/dashboard/AddHolding';
+import StockTable from '@/features/dashboard/StockTable';
+
 const DashboardPage = () => {
   return (
     <>
       <nav>
+        <AddHolding />
+        <StockTable />
         <button>Home</button>
         <button>Optimize</button>
         <button>Account</button>
@@ -20,6 +26,7 @@ const DashboardPage = () => {
       <div>Allocation</div>
       <div>Recent Activity</div>
       <div>Suggestions</div>
+      <LogoutButton />
     </>
   );
 };

@@ -84,7 +84,7 @@ select = [
 ignore = []
 
 [tool.ruff.lint.flake8-bugbear]
-extend-immutable-calls = ["fastapi.Depends", "fastapi.Form"]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Form", "fastapi.Body"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
