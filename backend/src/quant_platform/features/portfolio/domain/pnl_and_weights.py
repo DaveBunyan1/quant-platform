@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import cast
 
 from quant_platform.features.portfolio.schemas import (
     HoldingPosition,
@@ -9,7 +10,9 @@ from quant_platform.features.portfolio.schemas import (
 def calculate_portfolio_metrics(
     holdings: Sequence[HoldingPosition], prices: dict[str, float]
 ) -> list[PortfolioPosition]:
-    portfolio_positions = []
+    # Annotate the list to fix type inference
+    portfolio_positions: list[PortfolioPosition] = []
+
     for row in holdings:
         shares = float(row.shares)
         cost_basis = float(row.cost_basis)
@@ -23,16 +26,17 @@ def calculate_portfolio_metrics(
         )
 
         portfolio_positions.append(
-            {
-                "ticker": row.ticker,
-                "shares": shares,
-                "cost_basis": cost_basis,
-                "avg_price_per_share": avg_price,
-                "current_price": current_price,
-                "current_value": current_value,
-                "unrealized_pnl": unrealized_pnl,
-                "unrealized_pnl_pct": unrealized_pnl_percent,
-            }
+            PortfolioPosition(
+                ticker=row.ticker,
+                shares=shares,
+                cost_basis=cost_basis,
+                avg_price_per_share=avg_price,
+                current_price=current_price,
+                current_value=current_value,
+                unrealized_pnl=unrealized_pnl,
+                unrealized_pnl_pct=unrealized_pnl_percent,
+                weight=0.0,  # Initialize weight
+            )
         )
 
     total_portfolio_value = sum(p["current_value"] for p in portfolio_positions)
