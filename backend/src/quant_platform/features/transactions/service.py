@@ -2,7 +2,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from quant_platform.features.transactions.exceptions import TransactionNotFound
+from quant_platform.core.exceptions.exceptions import TransactionNotFound
 from quant_platform.features.transactions.repository import TransactionRepository
 from quant_platform.features.transactions.schemas import (
     TransactionCreate,

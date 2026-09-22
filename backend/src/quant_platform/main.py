@@ -9,7 +9,7 @@ from starlette_csrf.middleware import CSRFMiddleware
 
 from quant_platform.api.routes.user import router as user_router
 from quant_platform.auth.router import router as auth_router
-from quant_platform.features.transactions.exceptions import TransactionNotFound
+from quant_platform.core.exceptions.exceptions import TransactionNotFound
 from quant_platform.features.transactions.router import router as transaction_router
 from quant_platform.logging import get_logger, setup_logging
 from quant_platform.settings import settings

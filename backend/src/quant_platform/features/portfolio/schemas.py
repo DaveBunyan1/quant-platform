@@ -1,4 +1,7 @@
+from collections.abc import Callable
 from dataclasses import dataclass
+
+import pandas as pd
 
 
 @dataclass(slots=True)
@@ -12,3 +15,6 @@ class Holding:
     pnl: float
     pct_return: float
     weight: float
+
+
+FetchTickerDataFn = Callable[[list[str], str], pd.DataFrame | None]
