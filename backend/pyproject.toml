@@ -23,7 +23,6 @@ keywords = [
     "structlog"
 ]
 
-# TODO
 dependencies = [
     # Web Framework & Async
     "fastapi>=0.141.1",
@@ -37,6 +36,7 @@ dependencies = [
     "sqlalchemy>=2.0.52",
     "alembic>=1.20.0",
     "asyncpg>=0.31.0",
+    "redis>=8.1.0",
 
     # Security and auth
     "pwdlib>=0.3.1",
@@ -84,7 +84,7 @@ select = [
 ignore = []
 
 [tool.ruff.lint.flake8-bugbear]
-extend-immutable-calls = ["fastapi.Depends", "fastapi.Form"]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Form", "fastapi.Body"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

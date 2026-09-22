@@ -1,11 +1,17 @@
+import LogoutButton from '@/features/auth/components/LogoutButton';
+import AddHolding from '@/features/dashboard/AddHolding';
+import StockTable from '@/features/dashboard/StockTable';
+
 const DashboardPage = () => {
   return (
     <>
       <nav>
         <button>Home</button>
         <button>Optimize</button>
-        <button>Account</button>
+        <LogoutButton />
       </nav>
+      <AddHolding />
+      <StockTable />
       <h1>Portfolio Overview</h1>
       <div>
         <div>Current Value: $110,456</div>

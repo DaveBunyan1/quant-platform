@@ -1,36 +1,40 @@
 import re
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.middleware.cors import CORSMiddleware
 from starlette_csrf.middleware import CSRFMiddleware
 
-from quant_platform.api.routers.user import router as user_router
+from quant_platform.api.routes.user import router as user_router
 from quant_platform.auth.router import router as auth_router
+from quant_platform.core.exceptions.exceptions import TransactionNotFound
+from quant_platform.core.redis import init_redis_pool
+from quant_platform.features.portfolio.router import router as portfolio_router
+from quant_platform.features.transactions.router import router as transaction_router
 from quant_platform.logging import get_logger, setup_logging
 from quant_platform.settings import settings
 
-setup_logging()
 logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("starting_application", environment=settings.environment)
+    setup_logging()
+    await init_redis_pool()
     yield
     logger.info("shutting_down_application")
 
 
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 app = FastAPI(lifespan=lifespan)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 app.add_middleware(
     CSRFMiddleware,
@@ -45,8 +49,30 @@ app.add_middleware(
     ],
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(user_router)
 app.include_router(auth_router)
+app.include_router(transaction_router)
+app.include_router(portfolio_router)
+
+
+@app.exception_handler(TransactionNotFound)
+async def transaction_not_found_handler(
+    request: Request,
+    exc: TransactionNotFound,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=404,
+        content={"detail": str(exc)},
+    )
+
 
 Instrumentator(
     should_group_status_codes=True,

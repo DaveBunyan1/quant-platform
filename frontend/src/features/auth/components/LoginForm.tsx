@@ -93,7 +93,7 @@ const LoginForm = () => {
           Don't have an account?{' '}
           <button
             type="button"
-            className="cursor-pointer font-medium text-blue-600 hover:underline dark:text-purple-400"
+            className="cursor-pointer font-medium text-blue-600 hover:underline dark:text-blue-500"
             onClick={() => navigate('/register')}
           >
             Sign up

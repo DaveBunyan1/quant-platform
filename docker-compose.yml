@@ -17,6 +17,20 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: quant_platform_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -27,11 +41,14 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://quant:quant@db:5432/quant_platform
+      REDIS_URL: redis://redis:6379/0
       ENVIRONMENT: development
     ports:
       - "8000:8000"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     command: uvicorn quant_platform.main:app --host 0.0.0.0 --port 8000 --reload
 
@@ -74,5 +91,6 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   prometheus_data:
   grafana_data:
