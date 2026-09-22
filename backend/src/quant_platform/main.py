@@ -10,17 +10,20 @@ from starlette_csrf.middleware import CSRFMiddleware
 from quant_platform.api.routes.user import router as user_router
 from quant_platform.auth.router import router as auth_router
 from quant_platform.core.exceptions.exceptions import TransactionNotFound
+from quant_platform.core.redis import init_redis_pool
+from quant_platform.features.portfolio.router import router as portfolio_router
 from quant_platform.features.transactions.router import router as transaction_router
 from quant_platform.logging import get_logger, setup_logging
 from quant_platform.settings import settings
 
-setup_logging()
 logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("starting_application", environment=settings.environment)
+    setup_logging()
+    await init_redis_pool()
     yield
     logger.info("shutting_down_application")
 
@@ -57,6 +60,7 @@ app.add_middleware(
 app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(transaction_router)
+app.include_router(portfolio_router)
 
 
 @app.exception_handler(TransactionNotFound)

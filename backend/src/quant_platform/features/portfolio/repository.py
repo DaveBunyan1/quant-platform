@@ -69,5 +69,6 @@ class SQLAlchemyPortfolioRepository:
                 exc_info=True,
             )
             raise DatabaseQueryError(
-                f"Failed to execute portfolio query for user {user_id}"
+                repository="Portfolio Repository",
+                message=f"Failed to execute portfolio query for user {user_id}",
             ) from exc

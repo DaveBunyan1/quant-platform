@@ -35,3 +35,15 @@ DB_QUERY_REQUESTS = Counter(
     "Number of portfolio aggregation queries",
     ["result"],  # success | error
 )
+
+PORTFOLIO_REQUESTS = Counter(
+    "portfolio_summary_requests_total",
+    "Number of portfolio summary requests",
+    ["result"],  # success | empty | error
+)
+
+PORTFOLIO_LATENCY = Histogram(
+    "portfolio_summary_duration_seconds",
+    "Time spent generating a portfolio summary",
+    buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, float("inf")),
+)

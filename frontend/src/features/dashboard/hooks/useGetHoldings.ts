@@ -1,17 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { holdingsApi } from '../api/holdings';
 import type { User } from '@/features/auth/types/authTypes';
+import type { PortfolioSummaryResponse } from '../types/types';
 
 const useGetHoldings = (user: User | null) => {
-  return useQuery({
+  return useQuery<PortfolioSummaryResponse>({
     queryKey: ['holdings', user?.id],
     queryFn: async () => {
       const { data } = await holdingsApi.getHoldings();
       return data;
     },
     enabled: !!user,
-    retry: false,
-    staleTime: 60 * 60 * 1000,
+    retry: 1,
+    staleTime: 30 * 1000,
   });
 };
 

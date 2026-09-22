@@ -9,6 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 class Settings(BaseSettings):
     environment: str
     database_url: str
+    redis_url: str
     log_level: str = "INFO"
 
     jwt_secret_key: str = secrets.token_hex(32)

@@ -1,11 +1,10 @@
 import redis.asyncio as aioredis
 from fastapi import Depends
-from redis_client import get_redis_client
-from services import PortfolioService
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from quant_platform.core.clients.yfinance_client import get_ticker_data
 from quant_platform.core.database import get_async_session
+from quant_platform.core.redis import get_redis_client
 from quant_platform.features.portfolio.interfaces.provider import (
     MarketDataProviderProtocol,
 )
@@ -17,6 +16,7 @@ from quant_platform.features.portfolio.provider import (
     YFinanceMarketDataProvider,
 )
 from quant_platform.features.portfolio.repository import SQLAlchemyPortfolioRepository
+from quant_platform.features.portfolio.service import PortfolioService
 
 
 def get_portfolio_repository(
@@ -40,7 +40,10 @@ def get_market_data_provider(
 
 
 def get_portfolio_service(
-    tx_repo: PortfolioRepositoryProtocol = Depends(get_portfolio_repository),
+    repo: PortfolioRepositoryProtocol = Depends(get_portfolio_repository),
     market_data: MarketDataProviderProtocol = Depends(get_market_data_provider),
 ) -> PortfolioService:
-    return PortfolioService(tx_repo=tx_repo, market_data=market_data)
+    return PortfolioService(
+        repository=repo,
+        market_data_provider=market_data,
+    )

@@ -6,12 +6,12 @@ const DashboardPage = () => {
   return (
     <>
       <nav>
-        <AddHolding />
-        <StockTable />
         <button>Home</button>
         <button>Optimize</button>
-        <button>Account</button>
+        <LogoutButton />
       </nav>
+      <AddHolding />
+      <StockTable />
       <h1>Portfolio Overview</h1>
       <div>
         <div>Current Value: $110,456</div>
@@ -26,7 +26,6 @@ const DashboardPage = () => {
       <div>Allocation</div>
       <div>Recent Activity</div>
       <div>Suggestions</div>
-      <LogoutButton />
     </>
   );
 };
