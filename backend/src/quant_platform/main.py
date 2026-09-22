@@ -44,8 +44,6 @@ app.add_middleware(
     exempt_urls=[
         re.compile(r"^/auth/login$"),
         re.compile(r"^/auth/register$"),
-        re.compile(r"^/auth/refresh$"),
-        re.compile(r"^/auth/logout$"),
     ],
 )
 
