@@ -24,7 +24,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def register(
     user_create: UserCreate,
     session: AsyncSession = Depends(get_async_session),
-):
+) -> User:
     hashed = hash_password(user_create.password)
     user = User(**user_create.model_dump(exclude={"password"}), hashed_password=hashed)
 
@@ -39,12 +39,12 @@ async def register(
     return user
 
 
-@router.post("/login", response_model=TokenPair)
+@router.post("/login")
 async def login(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(OAuth2PasswordRequestForm),
     session: AsyncSession = Depends(get_async_session),
-):
+) -> TokenPair:
     email = form_data.username
     password = form_data.password
     user = await authenticate(email, password, session)
@@ -75,12 +75,12 @@ async def login(
     )
 
 
-@router.post("/refresh", response_model=Token)
+@router.post("/refresh")
 async def refresh(
     response: Response,
     session: AsyncSession = Depends(get_async_session),
     refresh_token: str | None = Cookie(None, alias=settings.refresh_token_cookie_name),
-):
+) -> Token:
     if not refresh_token:
         raise HTTPException(status_code=401, detail="Refresh token missing")
 
@@ -123,7 +123,7 @@ async def logout(
     response: Response,
     session: AsyncSession = Depends(get_async_session),
     refresh_token: str | None = Cookie(None, alias=settings.refresh_token_cookie_name),
-):
+) -> None:
     if refresh_token:
         result = await session.execute(
             select(RefreshToken).where(

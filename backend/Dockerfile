@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 FROM python:3.14-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -9,21 +7,25 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy project metadata first for better caching
+RUN groupadd --gid 1000 app && \
+    useradd --uid 1000 --gid app --shell /bin/bash --create-home app
+
 COPY pyproject.toml README.md ./
 COPY src ./src
 
-# Create venv + install everything in one go
 RUN uv venv /app/.venv && \
-    uv pip install -e .
+    uv pip install -e ".[dev]" && \
+    chown -R app:app /app
+
+USER app
 
 EXPOSE 8000
 

@@ -1,10 +1,14 @@
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import UUID, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from quant_platform.models.base import Base
+
+if TYPE_CHECKING:
+    from quant_platform.models.transaction import Transaction
 
 
 class User(Base):

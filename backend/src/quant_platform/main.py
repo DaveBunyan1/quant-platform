@@ -1,4 +1,5 @@
 import re
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -20,7 +21,7 @@ logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger.info("starting_application", environment=settings.environment)
     setup_logging()
     await init_redis_pool()
@@ -44,8 +45,6 @@ app.add_middleware(
     exempt_urls=[
         re.compile(r"^/auth/login$"),
         re.compile(r"^/auth/register$"),
-        re.compile(r"^/auth/refresh$"),
-        re.compile(r"^/auth/logout$"),
     ],
 )
 
@@ -82,5 +81,5 @@ Instrumentator(
 
 
 @app.get("/api/health")
-def health():
+def health() -> dict[str, str]:
     return {"status": "ok"}

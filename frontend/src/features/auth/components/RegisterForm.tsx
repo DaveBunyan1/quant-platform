@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRegister } from '../hooks/useRegister';
 import { registerSchema, type RegisterFormValues } from '../schemas/auth.schemas';
 import Button from '@/component/ui/Button';
+import { isAxiosError } from 'axios';
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -24,16 +25,21 @@ const RegisterForm = () => {
   });
 
   const onSubmit = (values: RegisterFormValues) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { confirmPassword, ...payload } = values;
 
     registerMutation.mutate(payload, {
-      onError: (error: any) => {
-        const message = error?.response?.data?.detail || 'Registration failed. Please try again.';
+      onError: (error: unknown) => {
+        const message = isAxiosError(error)
+          ? (error.response?.data as { detail?: string } | undefined)?.detail
+          : undefined;
 
-        if (typeof message === 'string' && message.toLowerCase().includes('email')) {
-          setError('email', { message });
+        const text = message || 'Registration failed. Please try again.';
+
+        if (typeof text === 'string' && text.toLowerCase().includes('email')) {
+          setError('email', { message: text });
         } else {
-          setError('root', { message });
+          setError('root', { message: text });
         }
       },
     });
