@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from typing import cast
 
 from quant_platform.features.portfolio.schemas import (
     HoldingPosition,

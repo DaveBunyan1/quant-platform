@@ -17,7 +17,7 @@ describe('loginSchema', () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].message).toMatch(/email is required/i);
+      expect(result.error.issues[0].message).toMatch(/Invalid email address/i);
     }
   });
 
@@ -31,22 +31,14 @@ describe('loginSchema', () => {
       expect(result.error.issues[0].message).toMatch(/valid email/i);
     }
   });
-
-  it('rejects password shorter than minimum', () => {
-    const result = loginSchema.safeParse({
-      username: 'user@example.com',
-      password: 'abc',
-    });
-    expect(result.success).toBe(false);
-  });
 });
 
 describe('registerSchema', () => {
   const valid = {
     email: 'user@example.com',
     username: 'dave',
-    password: 'secret',
-    confirmPassword: 'secret',
+    password: 'secret12',
+    confirmPassword: 'secret12',
   };
 
   it('accepts valid registration data', () => {

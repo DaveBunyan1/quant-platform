@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const MINIMUM_PASSWORD_LENGTH = 4;
+const MINIMUM_PASSWORD_LENGTH = 8;
 
 export const loginSchema = z.object({
   username: z.email().min(1, 'Email is required'),
