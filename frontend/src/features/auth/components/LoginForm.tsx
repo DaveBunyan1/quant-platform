@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLogin } from '../hooks/useLogin';
 import { loginSchema, type LoginFormValues } from '../schemas/auth.schemas';
 import Button from '@/component/ui/Button';
+import { isAxiosError } from 'axios';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -24,10 +25,14 @@ const LoginForm = () => {
 
   const onSubmit = (values: LoginFormValues) => {
     loginMutation.mutate(values, {
-      onError: (error: any) => {
-        const message = error?.response?.data?.detail || 'Invalid email or password';
+      onError: (error: unknown) => {
+        const message = isAxiosError(error)
+          ? (error.response?.data as { detail?: string } | undefined)?.detail
+          : undefined;
 
-        setError('root', { message });
+        setError('root', {
+          message: message || 'Invalid email or password',
+        });
       },
     });
   };
