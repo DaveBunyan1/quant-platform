@@ -17,7 +17,8 @@ async def get_transactions(
     service: TransactionService = Depends(get_transaction_service),
 ):
     """Return all transactions for a user"""
-    return await service.get_all_transactions(user_id=user.id)
+    txs = await service.get_all_transactions(user_id=user.id)
+    return {"holdings": txs}
 
 
 @router.get("/{transaction_id}")

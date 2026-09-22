@@ -54,7 +54,6 @@ class TransactionRepository:
 
         await self._session.flush()
         await self._session.refresh(txn)
-        await self._session.commit()
 
         return TransactionRead.model_validate(txn)
 
