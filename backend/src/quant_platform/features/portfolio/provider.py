@@ -3,41 +3,22 @@ from datetime import UTC, datetime, timedelta
 
 import pandas as pd
 import redis.asyncio as aioredis
-from prometheus_client import Counter, Histogram
 from redis.exceptions import RedisError
 
 from quant_platform.core.exceptions.exceptions import MarketDataFetchError
 from quant_platform.features.portfolio.interfaces.provider import (
     MarketDataProviderProtocol,
 )
+from quant_platform.features.portfolio.metrics import (
+    CACHE_LATENCY,
+    CACHE_REQUESTS,
+    YFINANCE_LATENCY,
+    YFINANCE_REQUESTS,
+)
 from quant_platform.features.portfolio.schemas import FetchTickerDataFn
 from quant_platform.logging import get_logger
 
 logger = get_logger(__name__)
-
-CACHE_REQUESTS = Counter(
-    "redis_cache_requests_total",
-    "Total ticker cache lookup attempts",
-    ["result"],  # hit | miss
-)
-
-CACHE_LATENCY = Histogram(
-    "redis_cache_latency_seconds",
-    "Time spent interacting with Redis cache",
-)
-
-YFINANCE_REQUESTS = Counter(
-    "yfinance_requests_total",
-    "Number of requests made to yfinance",
-    ["result"],  # success | empty | error
-)
-
-
-YFINANCE_LATENCY = Histogram(
-    "yfinance_request_duration_seconds",
-    "Time spent fetching data from yfinance",
-    buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, float("inf")),
-)
 
 
 class YFinanceMarketDataProvider:
