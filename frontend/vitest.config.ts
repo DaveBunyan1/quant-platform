@@ -7,10 +7,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
-  // Make Vite-style env available under import.meta.env in tests
   envPrefix: 'VITE_',
   test: {
     globals: true,
@@ -18,7 +17,6 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     css: true,
-    // Critical: inject env so client.ts does not throw on import
     env: {
       VITE_API_URL: 'http://localhost:8000',
     },
@@ -29,11 +27,10 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/main.tsx', 'src/test/**', '**/*.d.ts', '**/*.{test,spec}.{ts,tsx}'],
       thresholds: {
-        // 10 for this branch - To be fixed next branch
-        lines: 10,
-        functions: 10,
-        branches: 10,
-        statements: 10,
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
       },
     },
   },

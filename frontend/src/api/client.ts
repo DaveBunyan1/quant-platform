@@ -20,7 +20,11 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = tokenStore.get();
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    if (typeof config.headers.set === 'function') {
+      config.headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -44,12 +48,21 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config;
 
+    if (!original) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !original._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then((token) => {
-          original.headers.Authorization = `Bearer ${token}`;
+          if (typeof original.headers?.set === 'function') {
+            original.headers.set('Authorization', `Bearer ${token}`);
+          } else {
+            original.headers = original.headers || {};
+            original.headers.Authorization = `Bearer ${token}`;
+          }
           return api(original);
         });
       }
@@ -63,7 +76,13 @@ api.interceptors.response.use(
         tokenStore.set(data.access_token);
         processQueue(null, data.access_token);
 
-        original.headers.Authorization = `Bearer ${data.access_token}`;
+        if (typeof original.headers?.set === 'function') {
+          original.headers.set('Authorization', `Bearer ${data.access_token}`);
+        } else {
+          original.headers = original.headers || {};
+          original.headers.Authorization = `Bearer ${data.access_token}`;
+        }
+
         return api(original);
       } catch (err) {
         processQueue(err, null);
