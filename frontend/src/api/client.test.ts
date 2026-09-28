@@ -181,4 +181,50 @@ describe('API Client Interceptors', () => {
       expect(res.data.auth).toBe('Bearer plain-header-token');
     });
   });
+
+  it('attaches CSRF token from cookie to request headers', async () => {
+    document.cookie = 'csrftoken=test-csrf-token';
+
+    vi.mocked(tokenStore.get).mockReturnValue(null);
+
+    server.use(
+      http.get('*/csrf-test', ({ request }) => {
+        return HttpResponse.json({
+          csrfHeader: request.headers.get('x-csrftoken'),
+        });
+      }),
+    );
+
+    const res = await api.get('/csrf-test');
+
+    expect(res.data.csrfHeader).toBe('test-csrf-token');
+  });
+
+  it('rejects errors that do not contain an original request config', async () => {
+    const handlers = (api.interceptors.response as any).handlers;
+
+    const rejectedHandler = handlers[0].rejected;
+
+    const error = new Error('Network error');
+
+    await expect(rejectedHandler(error)).rejects.toBe(error);
+  });
+
+  it('rejects a 401 request that has already been retried', async () => {
+    const handlers = (api.interceptors.response as any).handlers;
+    const rejectedHandler = handlers[0].rejected;
+
+    const error = {
+      config: {
+        _retry: true,
+      },
+      response: {
+        status: 401,
+      },
+    };
+
+    await expect(rejectedHandler(error)).rejects.toBe(error);
+
+    expect(tokenStore.set).not.toHaveBeenCalled();
+  });
 });
