@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { useLogin } from '../hooks/useLogin';
 import { loginSchema, type LoginFormValues } from '../schemas/auth.schemas';
-import Button from '@/component/ui/Button';
+import Button from '@/components/ui/Button';
 import { isAxiosError } from 'axios';
 
 const LoginForm = () => {

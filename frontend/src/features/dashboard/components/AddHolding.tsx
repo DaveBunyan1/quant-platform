@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAddHolding } from './hooks/useAddHolding';
+import { useAddHolding } from '../hooks/useAddHolding';
 
 const AddHolding = () => {
   const [ticker, setTicker] = useState<string>('');
@@ -8,7 +8,7 @@ const AddHolding = () => {
 
   const { mutate: addHolding, isPending, isError, error } = useAddHolding();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
 
     const parsedShares = parseFloat(shares);
@@ -27,7 +27,6 @@ const AddHolding = () => {
       },
       {
         onSuccess: () => {
-          // Reset form fields
           setTicker('');
           setShares('');
           setBuyPrice('');
@@ -41,10 +40,12 @@ const AddHolding = () => {
       onSubmit={handleSubmit}
       className="m-2 mb-6 flex flex-wrap items-end gap-4 rounded-lg border border-slate-800 bg-black p-4"
     >
-      {/* Ticker */}
       <div className="flex flex-col">
-        <label className="mb-1 text-xs font-medium text-slate-400">Ticker</label>
+        <label className="mb-1 text-xs font-medium text-slate-400" htmlFor="ticker">
+          Ticker
+        </label>
         <input
+          id="ticker"
           required
           value={ticker}
           onChange={(e) => setTicker(e.target.value)}
@@ -53,10 +54,12 @@ const AddHolding = () => {
         />
       </div>
 
-      {/* Shares */}
       <div className="flex flex-col">
-        <label className="mb-1 text-xs font-medium text-slate-400">Shares</label>
+        <label className="mb-1 text-xs font-medium text-slate-400" htmlFor="shares">
+          Shares
+        </label>
         <input
+          id="shares"
           required
           type="number"
           step="any"
@@ -68,10 +71,12 @@ const AddHolding = () => {
         />
       </div>
 
-      {/* Buy Price */}
       <div className="flex flex-col">
-        <label className="mb-1 text-xs font-medium text-slate-400">Buy Price ($)</label>
+        <label className="mb-1 text-xs font-medium text-slate-400" htmlFor="buy-price">
+          Buy Price ($)
+        </label>
         <input
+          id="buy-price"
           required
           type="number"
           step="any"
@@ -83,7 +88,6 @@ const AddHolding = () => {
         />
       </div>
 
-      {/* Submit */}
       <button
         type="submit"
         disabled={isPending}
@@ -92,7 +96,6 @@ const AddHolding = () => {
         {isPending ? 'Adding...' : 'Add Holding'}
       </button>
 
-      {/* Error message */}
       {isError && (
         <div className="w-full text-xs text-rose-400">
           Failed to add holding: {error?.message || 'Check your inputs.'}
