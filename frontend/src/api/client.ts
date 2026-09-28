@@ -17,11 +17,33 @@ export const api = axios.create({
   },
 });
 
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+
 api.interceptors.request.use((config) => {
   const token = tokenStore.get();
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    if (typeof config.headers.set === 'function') {
+      config.headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
+
+  const csrfToken = getCookie('csrftoken');
+  if (csrfToken) {
+    if (typeof config.headers.set === 'function') {
+      config.headers.set('x-csrftoken', csrfToken);
+    } else {
+      config.headers['x-csrftoken'] = csrfToken;
+    }
+  }
+
   return config;
 });
 
@@ -44,12 +66,21 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config;
 
+    if (!original) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !original._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then((token) => {
-          original.headers.Authorization = `Bearer ${token}`;
+          if (typeof original.headers?.set === 'function') {
+            original.headers.set('Authorization', `Bearer ${token}`);
+          } else {
+            original.headers = original.headers || {};
+            original.headers.Authorization = `Bearer ${token}`;
+          }
           return api(original);
         });
       }
@@ -58,12 +89,30 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
+        const csrfToken = getCookie('csrftoken');
+
+        // Pass CSRF token to the refresh request as well
+        const { data } = await axios.post(
+          `${API_URL}/auth/refresh`,
+          {},
+          {
+            withCredentials: true,
+            headers: {
+              ...(csrfToken ? { 'x-csrftoken': csrfToken } : {}),
+            },
+          },
+        );
 
         tokenStore.set(data.access_token);
         processQueue(null, data.access_token);
 
-        original.headers.Authorization = `Bearer ${data.access_token}`;
+        if (typeof original.headers?.set === 'function') {
+          original.headers.set('Authorization', `Bearer ${data.access_token}`);
+        } else {
+          original.headers = original.headers || {};
+          original.headers.Authorization = `Bearer ${data.access_token}`;
+        }
+
         return api(original);
       } catch (err) {
         processQueue(err, null);

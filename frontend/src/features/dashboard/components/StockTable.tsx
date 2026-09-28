@@ -1,5 +1,5 @@
-import { useUser } from '../auth/hooks/useUser';
-import useGetHoldings from './hooks/useGetHoldings';
+import { useUser } from '../../auth/hooks/useUser';
+import useGetHoldings from '../hooks/useGetHoldings';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',

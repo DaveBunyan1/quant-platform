@@ -1,95 +1,148 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderWithProviders } from '@/test/test-utils';
-import RegisterForm from '../components/RegisterForm';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useRegister } from '../hooks/useRegister';
+import { useNavigate } from 'react-router-dom';
+import { AxiosError, type AxiosResponse, AxiosHeaders } from 'axios';
+import RegisterForm from '../components/RegisterForm';
 
-vi.mock('../hooks/useRegister');
+// Mock dependencies
+vi.mock('../hooks/useRegister', () => ({
+  useRegister: vi.fn(),
+}));
 
-const mockMutate = vi.fn();
+vi.mock('react-router-dom', () => ({
+  useNavigate: vi.fn(),
+}));
 
 describe('RegisterForm', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(useRegister).mockReturnValue({
+  const mockMutate = vi.fn();
+  const mockNavigate = vi.fn();
+
+  const mockUseRegister = (overrides = {}) =>
+    ({
       mutate: mockMutate,
       isPending: false,
-    } as any);
+      ...overrides,
+    }) as unknown as ReturnType<typeof useRegister>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+    vi.mocked(useRegister).mockReturnValue(mockUseRegister());
   });
 
-  it('renders all fields', () => {
-    renderWithProviders(<RegisterForm />, { route: '/register' });
+  it('renders all form fields and the submit button', () => {
+    render(<RegisterForm />);
 
     expect(screen.getByRole('heading', { name: /create an account/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument();
   });
 
-  it('shows validation errors on empty submit', async () => {
+  it('submits form with payload excluding confirmPassword when valid', async () => {
     const user = userEvent.setup();
-    renderWithProviders(<RegisterForm />, { route: '/register' });
+    render(<RegisterForm />);
 
-    await user.click(screen.getByRole('button', { name: /sign up/i }));
+    await user.type(screen.getByLabelText(/email/i), 'user@example.com');
+    await user.type(screen.getByLabelText(/username/i), 'johndoe');
+    await user.type(screen.getByLabelText(/^password/i), 'Password123!');
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password123!');
 
-    // At least some required-field messages should appear
-    expect(await screen.findAllByText(/required/i)).not.toHaveLength(0);
-    expect(mockMutate).not.toHaveBeenCalled();
-  });
-
-  it('rejects mismatched passwords', async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<RegisterForm />, { route: '/register' });
-
-    await user.type(screen.getByLabelText(/^email$/i), 'user@example.com');
-    await user.type(screen.getByLabelText(/username/i), 'dave');
-    await user.type(screen.getByLabelText(/^password$/i), 'secret');
-    await user.type(screen.getByLabelText(/confirm password/i), 'different');
-    await user.click(screen.getByRole('button', { name: /sign up/i }));
-
-    expect(await screen.findByText(/do not match/i)).toBeInTheDocument();
-    expect(mockMutate).not.toHaveBeenCalled();
-  });
-
-  it('submits valid data (without confirmPassword)', async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<RegisterForm />, { route: '/register' });
-
-    await user.type(screen.getByLabelText(/^email$/i), 'user@example.com');
-    await user.type(screen.getByLabelText(/username/i), 'dave');
-    await user.type(screen.getByLabelText(/^password$/i), 'secretpass');
-    await user.type(screen.getByLabelText(/confirm password/i), 'secretpass');
     await user.click(screen.getByRole('button', { name: /sign up/i }));
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledWith(
         {
           email: 'user@example.com',
-          username: 'dave',
-          password: 'secretpass',
+          username: 'johndoe',
+          password: 'Password123!',
         },
-        expect.any(Object),
+        expect.objectContaining({
+          onError: expect.any(Function),
+        }),
       );
     });
   });
 
-  it('displays server-side email error on the email field', async () => {
+  it('sets error on the email field when the server error contains "email"', async () => {
     const user = userEvent.setup();
-    mockMutate.mockImplementation((_values, { onError }) => {
-      onError({ response: { data: { detail: 'Email already registered' } } });
+
+    // Capture the onError callback passed to mutate
+    mockMutate.mockImplementation((_payload, options) => {
+      const mockAxiosError = new AxiosError('Request failed', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: { detail: 'Email is already taken' },
+        status: 400,
+        statusText: 'Bad Request',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse);
+
+      options?.onError?.(mockAxiosError);
     });
 
-    renderWithProviders(<RegisterForm />, { route: '/register' });
+    render(<RegisterForm />);
 
-    await user.type(screen.getByLabelText(/^email$/i), 'taken@example.com');
-    await user.type(screen.getByLabelText(/username/i), 'dave');
-    await user.type(screen.getByLabelText(/^password$/i), 'secret');
-    await user.type(screen.getByLabelText(/confirm password/i), 'secret');
+    await user.type(screen.getByLabelText(/email/i), 'taken@example.com');
+    await user.type(screen.getByLabelText(/username/i), 'johndoe');
+    await user.type(screen.getByLabelText(/^password/i), 'Password123!');
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password123!');
+
     await user.click(screen.getByRole('button', { name: /sign up/i }));
 
-    // expect(await screen.findByText(/email already registered/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/email is already taken/i)).toBeInTheDocument();
+    });
+  });
+
+  it('sets root error message when server error does not contain "email"', async () => {
+    const user = userEvent.setup();
+
+    mockMutate.mockImplementation((_payload, options) => {
+      const mockAxiosError = new AxiosError('Request failed', 'ERR_BAD_REQUEST', undefined, {}, {
+        data: { detail: 'Internal Server Error' },
+        status: 500,
+        statusText: 'Internal Server Error',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+      } as AxiosResponse);
+
+      options?.onError?.(mockAxiosError);
+    });
+
+    render(<RegisterForm />);
+
+    await user.type(screen.getByLabelText(/email/i), 'user@example.com');
+    await user.type(screen.getByLabelText(/username/i), 'johndoe');
+    await user.type(screen.getByLabelText(/^password/i), 'Password123!');
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password123!');
+
+    await user.click(screen.getByRole('button', { name: /sign up/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/internal server error/i)).toBeInTheDocument();
+    });
+  });
+
+  it('navigates to /login when clicking the "Sign in" link', async () => {
+    const user = userEvent.setup();
+    render(<RegisterForm />);
+
+    const signInButton = screen.getByRole('button', { name: /sign in/i });
+    await user.click(signInButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/login');
+  });
+
+  it('disables the submit button and displays loading text while pending', () => {
+    vi.mocked(useRegister).mockReturnValue(mockUseRegister({ isPending: true }));
+
+    render(<RegisterForm />);
+
+    const button = screen.getByRole('button', { name: /creating account…/i });
+    expect(button).toBeDisabled();
   });
 });

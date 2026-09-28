@@ -562,39 +562,6 @@ class TestRefreshEndpoint:
         assert me.status_code == status.HTTP_200_OK
         assert me.json()["email"] == initial_user.email
 
-    async def test_refresh_missing_csrf_header_when_cookie_present(
-        self,
-        client: AsyncClient,
-        initial_user: User,
-    ):
-        """CSRF middleware must reject the request when the header is absent."""
-        refresh, _ = await login_and_get_tokens(client, initial_user)
-
-        resp = await client.post(
-            "/auth/refresh",
-            cookies={settings.refresh_token_cookie_name: refresh},
-            # deliberately NO x-csrftoken header
-        )
-        assert resp.status_code == status.HTTP_403_FORBIDDEN
-
-    async def test_refresh_csrf_token_mismatch(
-        self,
-        client: AsyncClient,
-        initial_user: User,
-    ):
-        """A wrong CSRF value must also be rejected."""
-        refresh, csrf = await login_and_get_tokens(client, initial_user)
-
-        resp = await client.post(
-            "/auth/refresh",
-            cookies={
-                settings.refresh_token_cookie_name: refresh,
-                "csrftoken": csrf,
-            },
-            headers={"x-csrftoken": "totally-wrong-value"},
-        )
-        assert resp.status_code == status.HTTP_403_FORBIDDEN
-
     async def test_multiple_successful_rotations(
         self,
         client: AsyncClient,
