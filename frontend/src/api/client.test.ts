@@ -68,11 +68,13 @@ describe('API Client Interceptors', () => {
 
   describe('Response Interceptor (Token Refresh)', () => {
     it('queues multiple concurrent failed requests while refreshing and retries all', async () => {
-      let currentToken = 'old-token';
+      const tokenState = { current: 'old-token' };
 
-      vi.mocked(tokenStore.get).mockImplementation(() => currentToken);
+      vi.mocked(tokenStore.get).mockImplementation(() => tokenState.current);
       vi.mocked(tokenStore.set).mockImplementation((newToken: string | null) => {
-        if (newToken) currentToken = newToken;
+        if (newToken) {
+          tokenState.current = newToken;
+        }
       });
 
       server.use(
@@ -139,7 +141,7 @@ describe('API Client Interceptors', () => {
 
   describe('Refresh Failure & Queue Rejection', () => {
     it('rejects queued requests and clears tokens when refresh fails', async () => {
-      let currentToken: string | null = 'old-token';
+      const currentToken: string | null = 'old-token';
       vi.mocked(tokenStore.get).mockImplementation(() => currentToken);
 
       server.use(
