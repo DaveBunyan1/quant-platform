@@ -42,9 +42,11 @@ app.add_middleware(
     secret=settings.csrf_secret_token,
     sensitive_cookies={settings.refresh_token_cookie_name},
     cookie_domain="localhost",
+    header_name="X-Csrftoken",
     exempt_urls=[
         re.compile(r"^/auth/login$"),
         re.compile(r"^/auth/register$"),
+        re.compile(r"^/auth/refresh$"),
     ],
 )
 
