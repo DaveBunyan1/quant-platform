@@ -27,9 +27,15 @@ class YFinanceMarketDataProvider:
     def __init__(self, fetch_fn: FetchTickerDataFn):
         self._fetch_fn = fetch_fn
 
+    @staticmethod
+    def _to_yahoo_ticker(ticker: str) -> str:
+        return ticker.replace(".", "-")
+
     async def get_prices(self, tickers: list[str]) -> dict[str, float]:
         if not tickers:
             return {}
+
+        yahoo_tickers = [self._to_yahoo_ticker(ticker) for ticker in tickers]
 
         start_date = (datetime.now(tz=UTC) - timedelta(days=4)).strftime("%Y-%m-%d")
 
@@ -39,11 +45,11 @@ class YFinanceMarketDataProvider:
                 raw_data = await loop.run_in_executor(
                     None,
                     self._fetch_fn,
-                    tickers,
+                    yahoo_tickers,
                     start_date,
                 )
         except MarketDataFetchError:
-            # Already a well-formed domain error from get_ticker_data
+            # Well-formed domain error from get_ticker_data
             YFINANCE_REQUESTS.labels(result="error").inc()
             logger.error(
                 "yfinance provider failed",
@@ -92,9 +98,12 @@ class YFinanceMarketDataProvider:
             return {}
 
         prices: dict[str, float] = {}
+
         for ticker in tickers:
-            if ticker in latest_prices and pd.notna(latest_prices[ticker]):
-                prices[ticker] = float(latest_prices[ticker])
+            yahoo_ticker = self._to_yahoo_ticker(ticker)
+
+            if yahoo_ticker in latest_prices and pd.notna(latest_prices[yahoo_ticker]):
+                prices[ticker] = float(latest_prices[yahoo_ticker])
 
         if len(prices) < len(tickers):
             missing = sorted(set(tickers) - prices.keys())

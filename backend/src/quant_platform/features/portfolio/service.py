@@ -44,14 +44,8 @@ class PortfolioService:
             logger.info("No holdings found for user", extra={user_id: str(user_id)})
             return PortfolioSummaryResponse(holdings=[])
 
-        # Yahoo ticker mapping
-        ticker_map = {row.ticker: row.ticker.replace(".", "-") for row in holdings}
-
-        raw_prices = await self._market_data.get_prices(list(ticker_map.values()))
-        prices = {
-            ticker_map[yahoo_ticker]: price
-            for yahoo_ticker, price in raw_prices.items()
-        }
+        tickers = [row.ticker for row in holdings]
+        prices = await self._market_data.get_prices(tickers)
         metrics = calculate_portfolio_metrics(holdings, prices)
 
         PORTFOLIO_REQUESTS.labels(result="success").inc()

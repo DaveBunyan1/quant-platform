@@ -17,9 +17,10 @@ def mock_redis_client() -> AsyncMock:
     client.mget = AsyncMock()
     client.setex = AsyncMock()
 
-    mock_pipe = AsyncMock()
+    mock_pipe = MagicMock()
     mock_pipe.__aenter__.return_value = mock_pipe
     mock_pipe.__aexit__.return_value = None
+    mock_pipe.execute = AsyncMock()
 
     client.pipeline.return_value = mock_pipe
     return client
