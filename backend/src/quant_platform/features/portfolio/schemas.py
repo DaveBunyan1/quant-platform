@@ -26,7 +26,11 @@ class PortfolioPosition(TypedDict):
     weight: float
 
 
-class PortfolioSummaryResponse(BaseModel):
+class PortfolioSummary(BaseModel):
+    portfolio_value: float
+    total_cost_basis: float
+    unrealized_pnl: float
+    unrealized_pnl_pct: float
     holdings: list[PortfolioPosition]
 
 

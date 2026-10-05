@@ -13,7 +13,7 @@ from quant_platform.features.portfolio.metrics import (
     PORTFOLIO_LATENCY,
     PORTFOLIO_REQUESTS,
 )
-from quant_platform.features.portfolio.schemas import PortfolioSummaryResponse
+from quant_platform.features.portfolio.schemas import PortfolioSummary
 from quant_platform.logging import get_logger
 
 logger = get_logger(__name__)
@@ -31,9 +31,7 @@ class PortfolioService:
         self._market_data = market_data_provider
 
     @PORTFOLIO_LATENCY.time()
-    async def get_portfolio_summary(
-        self, user_id: uuid.UUID
-    ) -> PortfolioSummaryResponse:
+    async def get_portfolio_summary(self, user_id: uuid.UUID) -> PortfolioSummary:
         """Fetches user holdings from the DB, enriches them with current market data,
 
         and computes total valuation, unrealized PnL, and asset allocation weights.
@@ -42,7 +40,13 @@ class PortfolioService:
         if not holdings:
             PORTFOLIO_REQUESTS.labels(result="empty").inc()
             logger.info("No holdings found for user", extra={user_id: str(user_id)})
-            return PortfolioSummaryResponse(holdings=[])
+            return PortfolioSummary(
+                portfolio_value=0,
+                total_cost_basis=0,
+                unrealized_pnl=0,
+                unrealized_pnl_pct=0,
+                holdings=[],
+            )
 
         tickers = [row.ticker for row in holdings]
         prices = await self._market_data.get_prices(tickers)
@@ -53,8 +57,8 @@ class PortfolioService:
             "Successfully generated portfolio summary",
             extra={
                 "user_id": str(user_id),
-                "ticker_count": len(metrics),
+                "ticker_count": len(metrics.holdings),
             },
         )
 
-        return PortfolioSummaryResponse(holdings=metrics)
+        return metrics

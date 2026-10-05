@@ -3,13 +3,13 @@ from collections.abc import Sequence
 from quant_platform.features.portfolio.schemas import (
     HoldingPosition,
     PortfolioPosition,
+    PortfolioSummary,
 )
 
 
 def calculate_portfolio_metrics(
     holdings: Sequence[HoldingPosition], prices: dict[str, float]
-) -> list[PortfolioPosition]:
-    # Annotate the list to fix type inference
+) -> PortfolioSummary:
     portfolio_positions: list[PortfolioPosition] = []
 
     for row in holdings:
@@ -38,7 +38,14 @@ def calculate_portfolio_metrics(
             )
         )
 
-    total_portfolio_value = sum(p["current_value"] for p in portfolio_positions)
+    total_portfolio_value = sum(
+        position["current_value"] for position in portfolio_positions
+    )
+    total_cost_basis = sum(holding["cost_basis"] for holding in portfolio_positions)
+    total_unrealized_pnl = total_portfolio_value - total_cost_basis
+    total_unrealized_pnl_pct = (
+        (total_unrealized_pnl / total_cost_basis) * 100 if total_cost_basis > 0 else 0.0
+    )
 
     for position in portfolio_positions:
         position["weight"] = (
@@ -47,4 +54,10 @@ def calculate_portfolio_metrics(
             else 0.0
         )
 
-    return portfolio_positions
+    return PortfolioSummary(
+        portfolio_value=total_portfolio_value,
+        total_cost_basis=total_cost_basis,
+        unrealized_pnl=total_unrealized_pnl,
+        unrealized_pnl_pct=total_unrealized_pnl_pct,
+        holdings=portfolio_positions,
+    )
