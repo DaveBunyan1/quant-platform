@@ -49,24 +49,22 @@ class YFinanceMarketDataProvider:
                     start_date,
                 )
         except MarketDataFetchError:
-            # Well-formed domain error from get_ticker_data
             YFINANCE_REQUESTS.labels(result="error").inc()
             logger.error(
-                "yfinance provider failed",
+                "yfinance provider get_prices failed",
                 extra={"tickers": tickers},
                 exc_info=True,
             )
             raise
         except Exception as exc:
-            # Unexpected error from the executor / yfinance
             YFINANCE_REQUESTS.labels(result="error").inc()
             logger.error(
-                "Unexpected error while fetching from yfinance",
+                "Unexpected error while fetching from yfinance -> get_prices",
                 extra={"error": str(exc), "tickers": tickers},
                 exc_info=True,
             )
             raise MarketDataFetchError(
-                provider="yfinance",
+                provider="yfinance fn: get_prices",
                 message=f"Unexpected error fetching tickers {tickers}",
                 original_error=exc,
             ) from exc
@@ -114,6 +112,57 @@ class YFinanceMarketDataProvider:
 
         YFINANCE_REQUESTS.labels(result="success").inc()
         return prices
+
+    async def get_historical_prices(
+        self,
+        tickers: list[str],
+        start_date: str,
+    ) -> pd.DataFrame:
+        if not tickers:
+            return pd.DataFrame()
+
+        yahoo_tickers = [self._to_yahoo_ticker(ticker) for ticker in tickers]
+
+        try:
+            with YFINANCE_LATENCY.time():
+                loop = asyncio.get_running_loop()
+                raw_data = await loop.run_in_executor(
+                    None,
+                    self._fetch_fn,
+                    yahoo_tickers,
+                    start_date,
+                )
+        except MarketDataFetchError:
+            YFINANCE_REQUESTS.labels(result="error").inc()
+            logger.error(
+                "yfinance provider get_historical_prices failed",
+                extra={"tickers": tickers},
+                exc_info=True,
+            )
+            raise
+        except Exception as exc:
+            YFINANCE_REQUESTS.labels(result="error").inc()
+            logger.error(
+                "Unexpected error while fetching historical prices",
+                extra={
+                    "error": str(exc),
+                    "tickers": tickers,
+                },
+                exc_info=True,
+            )
+            raise MarketDataFetchError(
+                provider="yfinance fn: get_historical_prices",
+                message=f"Unexpected error fetching historical tickers {tickers}",
+                original_error=exc,
+            ) from exc
+
+        if raw_data is None or raw_data.empty:
+            YFINANCE_REQUESTS.labels(result="empty").inc()
+            return pd.DataFrame()
+
+        YFINANCE_REQUESTS.labels(result="success").inc()
+
+        return raw_data
 
 
 class CachedMarketDataProvider:
@@ -183,3 +232,17 @@ class CachedMarketDataProvider:
                     )
 
         return prices
+
+    async def get_historical_prices(
+        self,
+        tickers: list[str],
+        start_date: str,
+    ) -> pd.DataFrame:
+        if not tickers:
+            return pd.DataFrame()
+
+        # TODO: add historical data caching
+        return await self._provider.get_historical_prices(
+            tickers,
+            start_date,
+        )

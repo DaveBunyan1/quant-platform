@@ -2,7 +2,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from quant_platform.features.portfolio.provider import CachedMarketDataProvider
+from quant_platform.features.portfolio.providers.market_data_provider import (
+    CachedMarketDataProvider,
+)
 
 
 @pytest.fixture

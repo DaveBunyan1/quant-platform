@@ -35,3 +35,19 @@ class PortfolioSummary(BaseModel):
 
 
 FetchTickerDataFn = Callable[[list[str], str], pd.DataFrame | None]
+
+
+class PortfolioAnalytics(BaseModel):
+    sharpe_ratio: float
+    fama_french_3: FamaFrenchResult
+    fama_french_5: FamaFrenchResult
+
+
+class FamaFrenchResult(BaseModel):
+    alpha: float
+    market_beta: float
+    smb_beta: float
+    hml_beta: float
+    profitability_beta: float | None = None
+    investment_beta: float | None = None
+    r_squared: float

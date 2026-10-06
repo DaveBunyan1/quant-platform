@@ -11,7 +11,7 @@ from quant_platform.features.portfolio.interfaces.provider import (
 from quant_platform.features.portfolio.interfaces.repository import (
     PortfolioRepositoryProtocol,
 )
-from quant_platform.features.portfolio.provider import (
+from quant_platform.features.portfolio.providers.market_data_provider import (
     CachedMarketDataProvider,
     YFinanceMarketDataProvider,
 )
@@ -28,10 +28,8 @@ def get_portfolio_repository(
 def get_market_data_provider(
     redis: aioredis.Redis = Depends(get_redis_client),
 ) -> MarketDataProviderProtocol:
-    # 1. Base provider
     base_provider = YFinanceMarketDataProvider(fetch_fn=get_ticker_data)
 
-    # 2. Wrap with Redis caching
     return CachedMarketDataProvider(
         fallback_provider=base_provider,
         redis_client=redis,
